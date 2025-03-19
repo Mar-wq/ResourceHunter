@@ -59,6 +59,7 @@ class ResourceFinder {
         this.resource_callbacks = [this.add_media];
         // 资源存储在此处
         this.resource = new Map();
+        this.is_change = false;
     }
     // 该函数用来嗅探视频和音频资源
     add_media(request, response) {
@@ -88,7 +89,7 @@ class ResourceFinder {
                 for (let type_dic of this.config.response_rules) {
                     if (type_dic.state && header.value.match(new RegExp(type_dic.type))) {
                         // 响应同时符合要求
-                        res.response_type = type_dic.type;
+                        res.response_type = header.value;
                         flag = true;
                         break;
                     }
@@ -133,6 +134,7 @@ class ResourceFinder {
         for (let callback of this.resource_callbacks) {
             let res = callback.call(this, request, response);
             if (res) {
+                this.is_change = true;
                 console.log(request.url);
                 if (this.resource.has(request.tabId)) {
                     let tab_list = this.resource.get(request.tabId);
@@ -151,7 +153,57 @@ class ResourceFinder {
             }
         }
     }
+    // 外部通过次函数查看状态是否改变
+    is_status_change() {
+        let res = this.is_change;
+        this.is_change = false;
+        return res;
+    }
 }
+
+
+
+function get_response_type(headers){
+    for(let header of headers){
+        if(header.name.toLowerCase() === "content-type"){
+            return header.value;
+        }
+    }
+    return null;
+}
+
+
+function add_resource_by_filename(request, response){
+    let exts = ["m3u8", "m3u", "m4s", "mpeg", "mpeg4", "mpd"];
+    let reg = /attachment;\s*filename=(?<file_name>.*?\.(?<ext>.*?))$/;
+    let res = {};
+    for(let item of response.responseHeaders){
+        if(item.name.toLowerCase() === "content-disposition"){
+            let value = item.value;
+            let result = value.match(reg);
+            if(result.groups.ext){
+                result.groups.ext = result.groups.ext.toLowerCase();
+                // 遍历是否是需要的文件
+                for(let ext of exts){
+                    if(result.groups.ext === ext){
+                        res.url = request.url;
+                        res.file_name = result.groups.file_name;
+                        res.ext = result.groups.ext;
+                        res.response_type = get_response_type(response.responseHeaders);
+                        return res;
+                    }
+                }
+            }
+        }
+    }
+    return null;
+}
+
+
+// 实例化对象
+let __finder = new ResourceFinder();
+__finder.regester_callback(add_resource_by_filename);
+
 
 
 // 专注于过滤不要的数据， 如需过滤其他数据，需要用户自己提供回调
@@ -195,3 +247,6 @@ class ResourceFilter {
     }
 
 }
+
+
+let __filter = new ResourceFilter();

@@ -1,6 +1,9 @@
 
 // 向页面动态添加元素
 function add_item(resource) {
+    if(!resource.response_type){
+        resource.response_type = "unknow！"
+    }
     let html = $(`
         <div class="item">
             <div class="item_show">

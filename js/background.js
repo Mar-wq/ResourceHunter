@@ -1,5 +1,5 @@
 importScripts("/js/handle_resource.js")
-// 记录激活的popup页面
+// 发消息给popup页面
 function hook_callback(tmp, tab_id){
     if(tmp){
         chrome.runtime.sendMessage({
@@ -18,13 +18,13 @@ function hook_callback(tmp, tab_id){
 
 // hook专注于抓取数据，以及数据改变时，帮助回调
 class ChromeHook {
-    constructor() {
+    constructor(finder, filter) {
         // 记录请求头与请求id, 方便到时候找到请求头与响应
         this.reqid_map = new Map();
         // 用来添加资源
-        this._finder = new ResourceFinder();
+        this._finder = finder;
         // 用来过滤资源
-        this._filter = new ResourceFilter();
+        this._filter = filter;
         this.callbacks = [];
 
         // hook请求
@@ -47,10 +47,12 @@ class ChromeHook {
                 // 需要的数据将其加入资源
                 let request = this.reqid_map.get(data.requestId);
                 this._finder.add_resource(request, data);
-                let tmp = this._finder.resource.get(request.tabId, null);
-                // 数据改变了，同时有激活的popup页面才主动发送数据
-                for(let fun of this.callbacks){
-                    fun(tmp, request.tabId);
+                if(this._finder.is_status_change()){
+                    // 数据改变了
+                    let tmp = this._finder.resource.get(request.tabId, null);
+                    for(let fun of this.callbacks){
+                        fun(tmp, request.tabId);
+                    }
                 }
                 this.reqid_map.delete(data.requestId);
             }
@@ -76,7 +78,7 @@ class ChromeHook {
 }
 
 
-let chromehook = new ChromeHook();
+let chromehook = new ChromeHook(__finder, __filter);
 chromehook.on_hook(hook_callback);
 
 
