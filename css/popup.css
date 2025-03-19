@@ -1,38 +1,85 @@
-.item {
-    border: 1px solid #ddd;
-    padding: 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    width:300px; 
-}
-.item_hide {
-    /* position: absolute; */
-    display: none; /* 默认隐藏 */
-    background-color: white; /* 可选，给一个背景色 */
-    padding: 10px;
-    margin-top: 10px; /* 根据需要添加间距 */
-    border: 1px solid #ccc; /* 可选，增加边框 */
-}
-.item:hover .item_show {
-    display: block; /* 鼠标悬停时显示 */
-}
-.video-icon {
-    width: 24px;
-    height: 24px;
-    background-color: #777; /* 图标背景色 */
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 5px;
-}
-.item_hide video {
-    width: 100%;
-    height: auto;
+/* 无数据时候显示 */
+#nodata {
+    color: orange;
+    text-align: center;
+    width: 320px;
 }
 
-.fix_btn{
-    position: fixed; 
-    bottom: 10px; 
-    right: 10px; 
-    padding: 0;
-    height: 20px;
+/* 单个元素 */
+.item {
+    border: 2px solid #ddd;
+    border-style: solid;
+    padding: 10px;
+    margin-bottom: 5px;
+    width:340px; 
+    border-radius: 5px;
 }
+/* 隐藏部分 */
+.item_hide {
+     /* 默认隐藏 */
+    display: none;     
+    padding: 10px;
+    margin-top: 10px; /* 根据需要添加间距 */
+    border: 2px solid #ccc; /* 可选，增加边框 */
+    border-style: dashed;
+}
+
+.item_hide video {
+    width: 320px;
+    height: 180px;
+    object-fit: fill;   /* 这个属性能够让 video标签没有顶部空白 */
+}
+
+.item_hide .info{
+    margin: 0px;
+    height: 30px;
+    color: rgb(97, 102, 109);
+}
+
+.item_hide .info{
+    margin: 0px;
+    height: 30px;
+}
+
+/* 显示部分 */
+.item_show{
+    font-size: 13px;
+    height: 32px;
+}
+
+.item_show .video-icon {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 5px;
+    background-image: url("../img/video.svg");
+}
+
+.item_show span{
+    line-height: 38px;
+    text-align: center;
+    color: rgb(97, 102, 109);
+}
+
+.bottom_div{
+    height: 30px;
+}
+
+/* 底部固定按钮 */
+.fix_btn{
+    background-color: rgb(1, 208, 189);
+    color: white;
+    font-weight: 600;
+    position: fixed;    /* 设置固定位置， 固定到右下角 如果相对父元素， 父元素的position需要设置relative*/
+    bottom: 5px; 
+    right: 5px; 
+    padding: 0 3px;     /* 设置内边距 */
+    text-align: center; /* 字体居中对齐 */
+    height: 30px;       /* 设置元素高度 */
+    line-height: 30px;     /* 设置行高 */
+    border-radius: 6px;    /* 设置边框的圆角 */
+    border-style: none;
+}
+
+

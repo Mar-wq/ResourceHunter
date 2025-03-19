@@ -5,10 +5,10 @@ function add_item(resource) {
         <div class="item">
             <div class="item_show">
                 <span class="video-icon"></span>
-                文件名：${resource.file_name} 
+                <span>文件名：${resource.file_name}</span>
             </div>
             <div class="item_hide">
-                <div>
+                <div class="info">
                     MIME：${resource.response_type}
                 </div>
                 <video controls>
@@ -25,11 +25,9 @@ function add_item(resource) {
                 hide_div.slideUp();
                 // 隐藏时， 暂停视频
                 $(this).find("video")[0].pause();
-                $(this).css("margin-bottom", "10px");
-
             } else {
                 hide_div.slideDown();
-                $(this).css("margin-bottom", hide_div.outerHeight() + "px");
+
                 // 删除Range头部，可以直接播放整个视频（针对m4s）
                 resource.request_headers = resource.request_headers.filter(item => item.name != "Range");
                 setRequestHeaders(resource.request_headers, () => {
