@@ -1,0 +1,38 @@
+.item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    width:300px; 
+}
+.item_hide {
+    /* position: absolute; */
+    display: none; /* 默认隐藏 */
+    background-color: white; /* 可选，给一个背景色 */
+    padding: 10px;
+    margin-top: 10px; /* 根据需要添加间距 */
+    border: 1px solid #ccc; /* 可选，增加边框 */
+}
+.item:hover .item_show {
+    display: block; /* 鼠标悬停时显示 */
+}
+.video-icon {
+    width: 24px;
+    height: 24px;
+    background-color: #777; /* 图标背景色 */
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+.item_hide video {
+    width: 100%;
+    height: auto;
+}
+
+.fix_btn{
+    position: fixed; 
+    bottom: 10px; 
+    right: 10px; 
+    padding: 0;
+    height: 20px;
+}

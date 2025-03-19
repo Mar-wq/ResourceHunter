@@ -1,0 +1,43 @@
+{
+    "manifest_version": 3,
+    "name": "背景脚本",
+    "version": "1.0",
+    "description": "hook网络请求",
+    "permissions": [
+        "webRequest",
+        "tabs",
+        "activeTab",
+        "declarativeNetRequest"
+    ],
+    "action":{
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "js/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "js/content.js"
+            ]
+        }
+    ],
+    "host_permissions": [
+        "*://*/*",
+        "<all_urls>"
+    ],
+    "web_accessible_resources": [
+        {
+          "resources": [
+            "js/*",
+            "css/*"
+          ],
+          "matches": [
+            "<all_urls>"
+          ]
+        }
+    ]
+}
