@@ -11,40 +11,46 @@
     border-style: solid;
     padding: 10px;
     margin-bottom: 5px;
-    width:340px; 
+    width: 340px;
     border-radius: 5px;
 }
+
 /* 隐藏部分 */
 .item_hide {
-     /* 默认隐藏 */
-    display: none;     
+    /* 默认隐藏 */
+    display: none;
     padding: 10px;
-    margin-top: 10px; /* 根据需要添加间距 */
-    border: 2px solid #ccc; /* 可选，增加边框 */
+    margin-top: 10px;
+    /* 根据需要添加间距 */
+    border: 2px solid #ccc;
+    /* 可选，增加边框 */
     border-style: dashed;
 }
 
 .item_hide video {
     width: 320px;
     height: 180px;
-    object-fit: fill;   /* 这个属性能够让 video标签没有顶部空白 */
+    object-fit: fill;
+    /* 这个属性能够让 video标签没有顶部空白 */
 }
 
-.item_hide .info{
+.item_hide .info {
     margin: 0px;
     height: 30px;
     color: rgb(97, 102, 109);
 }
 
-.item_hide .info{
+.item_hide .info {
     margin: 0px;
     height: 30px;
 }
 
 /* 显示部分 */
-.item_show{
+.item_show {
     font-size: 13px;
-    height: 32px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .item_show .video-icon {
@@ -56,32 +62,36 @@
     background-image: url("../img/video.svg");
 }
 
-.item_show span{
+.item_show span {
     line-height: 38px;
     text-align: center;
     color: rgb(97, 102, 109);
 }
 
-.bottom_div{
+.bottom_div {
     height: 30px;
 }
 
 /* 底部固定按钮 */
-.fix_btn{
+.fix_btn {
     background-color: rgb(1, 208, 189);
     color: white;
     font-weight: 600;
     /* 设置固定位置， 固定到右下角 如果相对父元素， 父元素的position需要设置relative*/
-    /* position: absolute; */ 
-    position: fixed;    /* fixed是根据可视区域进行定位的 */
-    bottom: 5px; 
-    right: 5px; 
-    padding: 0 3px;     /* 设置内边距 */
-    text-align: center; /* 字体居中对齐 */
-    height: 30px;       /* 设置元素高度 */
-    line-height: 30px;     /* 设置行高 */
-    border-radius: 6px;    /* 设置边框的圆角 */
+    /* position: absolute; */
+    position: fixed;
+    /* fixed是根据可视区域进行定位的 */
+    bottom: 5px;
+    right: 5px;
+    padding: 0 3px;
+    /* 设置内边距 */
+    text-align: center;
+    /* 字体居中对齐 */
+    height: 30px;
+    /* 设置元素高度 */
+    line-height: 30px;
+    /* 设置行高 */
+    border-radius: 6px;
+    /* 设置边框的圆角 */
     border-style: none;
 }
-
-

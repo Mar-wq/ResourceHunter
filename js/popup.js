@@ -19,11 +19,11 @@ function add_item(resource) {
         <div class="item">
             <div class="item_show">
                 <span class="video-icon"></span>
-                <span>文件名：${resource.file_name}</span>
+                <span title="${resource.file_name}">文件名: ${resource.file_name}</span>
             </div>
             <div class="item_hide">
                 <div class="info">
-                    MIME：${resource.response_type}
+                    MIME: ${resource.response_type}
                 </div>
                 <video controls>
                     Your browser does not support the video tag.
