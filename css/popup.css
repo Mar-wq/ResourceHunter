@@ -73,7 +73,7 @@
     font-weight: 600;
     /* 设置固定位置， 固定到右下角 如果相对父元素， 父元素的position需要设置relative*/
     /* position: absolute; */ 
-    position: fixed;    /* fixed是根据可是区域进行定位的 */
+    position: fixed;    /* fixed是根据可视区域进行定位的 */
     bottom: 5px; 
     right: 5px; 
     padding: 0 3px;     /* 设置内边距 */

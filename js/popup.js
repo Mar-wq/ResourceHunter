@@ -1,8 +1,19 @@
+function is_m3u8(data) {
+    let exts = ["m3u8","m3u"];
+    let types = ["application/vnd.apple.mpegurl","application/x-mpegurl","application/mpegurl","application/octet-stream-m3u8"];
+
+    let flag = false;
+    flag = exts.includes(data.ext) || types.includes(data.response_type);
+    return flag;
+}
+
+
+
 
 // 向页面动态添加元素
 function add_item(resource) {
     if(!resource.response_type){
-        resource.response_type = "unknow！"
+        resource.response_type = "unknow!"
     }
     let html = $(`
         <div class="item">
@@ -30,12 +41,20 @@ function add_item(resource) {
                 $(this).find("video")[0].pause();
             } else {
                 hide_div.slideDown();
-
                 // 删除Range头部，可以直接播放整个视频（针对m4s）
                 resource.request_headers = resource.request_headers.filter(item => item.name != "Range");
-                setRequestHeaders(resource.request_headers, () => {
-                    $(this).find("video").attr("src", resource.url_with_params);
-                });
+                if(is_m3u8(resource)){
+                    let hls = new Hls({ enableWorker: false });
+                    setRequestHeaders(resource.request_headers, ()=>{
+                        hls.loadSource(resource.url_with_params);
+                        hls.attachMedia($(this).find("video")[0]);
+                    })
+                    
+                }else{
+                    setRequestHeaders(resource.request_headers, () => {
+                        $(this).find("video").attr("src", resource.url_with_params);
+                    });
+                }
             }
         };
     })(resource))
@@ -78,20 +97,22 @@ function update_dom(infos_map) {
 
 // 管理该页面的信息数据
 class MediaInfo {
-    constructor() {
+    // 提供预处理数据的函数
+    constructor(prepare_data) {
         // 当前页面的id
         this.tab_id = -1;
         // 媒体的Map
         this.unique_infos = new Map();
         // 数据更新时的回调
         this.update_callbacks = []
-
+        // 预处理得到的信息
+        this.prepare_data = prepare_data;
         // 接收background劫持到的数据
         chrome.runtime.onMessage.addListener(async (request, sender, sendresponse) => {
             sendresponse();
             let current_tab_id = await this.get_tab_id();
             if (request.Message === "popupData" && current_tab_id === request.tab_id) {
-                let map = get_unique_by_url(request.infos);
+                let map = this.prepare_data(request.infos);
                 if (map) {
                     for (let key of map.keys()) {
                         if (!this.unique_infos.has(key)) {
@@ -137,7 +158,7 @@ class MediaInfo {
 
 
 // 当前页面的媒体信息
-let media_info = new MediaInfo();
+let media_info = new MediaInfo(get_unique_by_url);
 media_info.on_update(update_dom);
 
 
