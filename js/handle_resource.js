@@ -3,7 +3,7 @@ importScripts("/js/util.js")
 
 // 专注于抓取需要的数据， 如还需抓取其他数据，需要用户自己提供回调
 class ResourceFinder {
-    constructor(req_rules=[], res_rules=[]) {
+    constructor(req_rules = [], res_rules = []) {
         let base_req_rules = [
             { "ext": "flv", "size": 0, "state": true },
             { "ext": "hlv", "size": 0, "state": true },
@@ -74,7 +74,7 @@ class ResourceFinder {
             res.params = result.groups.params;
         }
         let flag = false;
-        if(res.ext){
+        if (res.ext) {
             for (let dic of this.config.request_rules) {
                 if (dic.state && dic.ext == res.ext) {
                     flag = true;
@@ -85,7 +85,7 @@ class ResourceFinder {
         // 根据响应查找
         let res_headers = response.responseHeaders || [];
         for (let header of res_headers) {
-            if(header.name === "content-type"){
+            if (header.name === "content-type") {
                 for (let type_dic of this.config.response_rules) {
                     if (type_dic.state && header.value.match(new RegExp(type_dic.type))) {
                         // 响应同时符合要求
@@ -94,14 +94,14 @@ class ResourceFinder {
                         break;
                     }
                 }
-            } 
+            }
         }
         // 根据响应获取文件大小
-        for(let header of res_headers){
-            if(header.name === "content-length"){
+        for (let header of res_headers) {
+            if (header.name === "content-length") {
                 res.file_size = parseInt(header.value);
                 break;
-            }else if(header.name === "content-range"){
+            } else if (header.name === "content-range") {
                 let size = header.value.split('/')[1];
                 if (size !== '*') {
                     res.file_size = parseInt(size);
@@ -136,23 +136,24 @@ class ResourceFinder {
             if (res) {
                 this.is_change = true;
                 console.log(request.url);
-                if (this.resource.has(request.tabId)) {
-                    let tab_list = this.resource.get(request.tabId);
-                    if (tab_list.isFull()) {
-                        tab_list.dequeue();
-                    }
-                    tab_list.enqueue({
-                        tab_id: request.tabId,
-                        url_with_params: request.url,
-                        request_headers: request.requestHeaders,
-                        ...res
-                    })
-                } else {
+                // 没有这个页面的数据，则添加
+                if (!this.resource.has(request.tabId)) {
                     this.resource.set(request.tabId, new CircularQueue(500));
                 }
+                let tab_list = this.resource.get(request.tabId);
+                if (tab_list.isFull()) {
+                    tab_list.dequeue();
+                }
+                tab_list.enqueue({
+                    tab_id: request.tabId,
+                    url_with_params: request.url,
+                    request_headers: request.requestHeaders,
+                    ...res
+                })
             }
         }
     }
+
     // 外部通过次函数查看状态是否改变
     is_status_change() {
         let res = this.is_change;
@@ -163,9 +164,9 @@ class ResourceFinder {
 
 
 
-function get_response_type(headers){
-    for(let header of headers){
-        if(header.name.toLowerCase() === "content-type"){
+function get_response_type(headers) {
+    for (let header of headers) {
+        if (header.name.toLowerCase() === "content-type") {
             return header.value;
         }
     }
@@ -173,19 +174,19 @@ function get_response_type(headers){
 }
 
 
-function add_resource_by_filename(request, response){
+function add_resource_by_filename(request, response) {
     let exts = ["m3u8", "m3u", "m4s", "mpeg", "mpeg4", "mpd"];
     let reg = /attachment;\s*filename=(?<file_name>.*?\.(?<ext>.*?))$/;
     let res = {};
-    for(let item of response.responseHeaders){
-        if(item.name.toLowerCase() === "content-disposition"){
+    for (let item of response.responseHeaders) {
+        if (item.name.toLowerCase() === "content-disposition") {
             let value = item.value;
             let result = value.match(reg);
-            if(result.groups.ext){
+            if (result?.groups?.ext) {
                 result.groups.ext = result.groups.ext.toLowerCase();
                 // 遍历是否是需要的文件
-                for(let ext of exts){
-                    if(result.groups.ext === ext){
+                for (let ext of exts) {
+                    if (result.groups.ext === ext) {
                         res.url = request.url;
                         res.file_name = result.groups.file_name;
                         res.ext = result.groups.ext;
@@ -208,7 +209,7 @@ __finder.regester_callback(add_resource_by_filename);
 
 // 专注于过滤不要的数据， 如需过滤其他数据，需要用户自己提供回调
 class ResourceFilter {
-    constructor(reg_list=[]) {
+    constructor(reg_list = []) {
         // 用来使用用户正则表达式的
         this.reg_list = [/chrome-extension:.*/, ...reg_list];
         this.filter_callbacks = [this.filter_by_initiator];
