@@ -63,7 +63,7 @@ function add_item(resource) {
 
     html.find(".download").click((function (resource){
         return function(){
-            alert("文件：", resource.file_name, ",下载开始，请等待");
+            alert("文件下载开始，请等待");
             resource.request_headers = resource.request_headers.filter(item => item.name != "Range");
             let req_headers = resource.request_headers;
             let headers = {}
@@ -87,7 +87,7 @@ function add_item(resource) {
                     URL.revokeObjectURL(link.href);
                 }).catch(error => {
                     console.error('下载失败:', error);
-                    alert("文件：", resource.file_name, ",下载失败");
+                    alert("文件下载失败");
                 });
             }
         }
