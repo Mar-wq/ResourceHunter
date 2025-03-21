@@ -9,6 +9,7 @@ function is_m3u8(data) {
 
 // 向页面动态添加元素
 function add_item(resource) {
+    // 暂时不显示ts文件
     if(resource.file_name.match(/.*\.ts/)){
         return null;
     }
@@ -34,13 +35,13 @@ function add_item(resource) {
         </div>
     `);
     // 使用闭包传递resource
-    html.click((function (resource) {
+    html.find(".item_show").click((function (resource) {
         return function () {
-            const hide_div = $(this).find(".item_hide");
+            const hide_div = $(this).parent().find(".item_hide");
             if (hide_div.is(":visible")) {
                 hide_div.slideUp();
                 // 隐藏时， 暂停视频
-                $(this).find("video")[0].pause();
+                $(this).parent().find("video")[0].pause();
             } else {
                 hide_div.slideDown();
                 // 删除Range头部，可以直接播放整个视频（针对m4s）
@@ -49,11 +50,11 @@ function add_item(resource) {
                     let hls = new Hls({ enableWorker: false });
                     setRequestHeaders(resource.request_headers, ()=>{
                         hls.loadSource(resource.url_with_params);
-                        hls.attachMedia($(this).find("video")[0]);
+                        hls.attachMedia($(this).parent().find("video")[0]);
                     })
                 }else{
                     setRequestHeaders(resource.request_headers, () => {
-                        $(this).find("video").attr("src", resource.url_with_params);
+                        $(this).parent().find("video").attr("src", resource.url_with_params);
                     });
                 }
             }
@@ -61,8 +62,7 @@ function add_item(resource) {
     })(resource))
 
     html.find(".download").click((function (resource){
-        return function(event){
-            event.stopPropagation();  // 阻止事件传播
+        return function(){
             alert("文件：", resource.file_name, ",下载开始，请等待");
             resource.request_headers = resource.request_headers.filter(item => item.name != "Range");
             let req_headers = resource.request_headers;
@@ -115,23 +115,35 @@ function get_unique_by_url(infos) {
 }
 
 // 更新页面
-function update_dom(infos_map) {
-    // console.log(infos_map);
-    let $nodata = $("#nodata");
-    let $resources_list = $("#resources_list")
-    if (!infos_map || infos_map?.size == 0) {
-        $nodata.show();
-        return;
-    }
-    $nodata.hide();
-    $resources_list.empty();
-    for (let [url, info] of infos_map) {
-        let node = add_item(info)
-        if(node){
-            $resources_list.append(node);
+let update_dom = (function () {
+    let old_infos = new Map();
+    return function(infos_map){
+        // console.log(infos_map);
+        let $nodata = $("#nodata");
+        let $resources_list = $("#resources_list")
+        if (!infos_map || infos_map?.size == 0) {
+            $nodata.show();
+            return;
         }
-    }
-}
+        $nodata.hide();
+        let add_infos = new Map();
+        // 找出新增节点
+        for(let [url, info] of infos_map){
+            if(!old_infos.has(url)){
+                add_infos.set(url, info);
+            }
+        }
+        // 增加新节点
+        for(let [url, info] of add_infos){
+            let node = add_item(info)
+            if(node){
+                $resources_list.append(node);
+            }
+        }
+        // 保存页面当前显示的数据
+        old_infos = infos_map;
+    }  
+})();
 
 // 管理该页面的信息数据
 class MediaInfo {
