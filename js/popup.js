@@ -7,11 +7,11 @@ function is_m3u8(data) {
     return flag;
 }
 
-
-
-
 // 向页面动态添加元素
 function add_item(resource) {
+    if(resource.file_name.match(/.*\.ts/)){
+        return null;
+    }
     if(!resource.response_type){
         resource.response_type = "unknow!"
     }
@@ -28,6 +28,8 @@ function add_item(resource) {
                 <video controls>
                     Your browser does not support the video tag.
                 </video>
+                <button class="download">下载</button>
+                
             </div>
         </div>
     `);
@@ -49,7 +51,6 @@ function add_item(resource) {
                         hls.loadSource(resource.url_with_params);
                         hls.attachMedia($(this).find("video")[0]);
                     })
-                    
                 }else{
                     setRequestHeaders(resource.request_headers, () => {
                         $(this).find("video").attr("src", resource.url_with_params);
@@ -58,6 +59,41 @@ function add_item(resource) {
             }
         };
     })(resource))
+
+    html.find(".download").click((function (resource){
+        return function(event){
+            event.stopPropagation();  // 阻止事件传播
+            alert("文件：", resource.file_name, ",下载开始，请等待");
+            resource.request_headers = resource.request_headers.filter(item => item.name != "Range");
+            let req_headers = resource.request_headers;
+            let headers = {}
+            for(let header of req_headers){
+                headers[header.name] = header.value;
+            }
+            if(is_m3u8(resource)){
+                let download = new M3u8Download(headers, resource.file_name);
+                download.get_m3u8(resource.url_with_params);
+            }else{
+                fetch(resource.url_with_params, {headers: headers}).then(response=> response.blob())
+                .then(blob => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'video.mp4';
+
+                    // 触发点击事件
+                    link.click();
+
+                    // 释放 URL 对象
+                    URL.revokeObjectURL(link.href);
+                }).catch(error => {
+                    console.error('下载失败:', error);
+                    alert("文件：", resource.file_name, ",下载失败");
+                });
+            }
+        }
+    })(resource))
+
+
     return html;
 }
 
@@ -91,7 +127,9 @@ function update_dom(infos_map) {
     $resources_list.empty();
     for (let [url, info] of infos_map) {
         let node = add_item(info)
-        $resources_list.append(node);
+        if(node){
+            $resources_list.append(node);
+        }
     }
 }
 
