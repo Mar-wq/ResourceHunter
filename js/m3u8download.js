@@ -149,7 +149,7 @@ class M3u8Download{
             this.aes_conf.key = key
             this.aes_conf.decryptor = new AESDecryptor()
             this.aes_conf.decryptor.constructor()
-            this.aes_conf.decryptor.expandKey(aes_conf.key);
+            this.aes_conf.decryptor.expandKey(this.aes_conf.key);
             this.download_ts();
         }).catch((err)=>console.log("视频解密失败"))
     }
@@ -190,11 +190,11 @@ class M3u8Download{
 
             // 文件加密了
             if (m3u8.indexOf('#EXT-X-KEY') > -1){
-                this.aes_conf.method = (m3u8Str.match(/(.*METHOD=([^,\s]+))/) || ['', '', ''])[2]
-                this.aes_conf.uri = (m3u8Str.match(/(.*URI="([^"]+))"/) || ['', '', ''])[2]
-                this.aes_conf.iv = (m3u8Str.match(/(.*IV=([^,\s]+))/) || ['', '', ''])[2]
-                this.aes_conf.iv = this.aesConf.iv ? this.aesConf.stringToBuffer(this.aesConf.iv) : ''
-                this.aes_conf.uri = this.merge_url(aes_conf.uri, url);
+                this.aes_conf.method = (m3u8.match(/(.*METHOD=([^,\s]+))/) || ['', '', ''])[2]
+                this.aes_conf.uri = (m3u8.match(/(.*URI="([^"]+))"/) || ['', '', ''])[2]
+                this.aes_conf.iv = (m3u8.match(/(.*IV=([^,\s]+))/) || ['', '', ''])[2]
+                this.aes_conf.iv = this.aes_conf.iv ? new TextEncoder().encode(this.aes_conf.iv) : ''
+                this.aes_conf.uri = this.merge_url(this.aes_conf.uri, url);
                 this.get_aes();
             }else{
                 this.download_ts();
