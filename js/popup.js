@@ -71,18 +71,23 @@ function add_item(resource) {
                 headers[header.name] = header.value;
             }
             if(is_m3u8(resource)){
-                let download = new M3u8Download(headers, resource.file_name);
-                download.get_m3u8(resource.url_with_params);
+                let callback = (blob)=>{
+                    let a = document.createElement('a');
+                    a.download = "testm3u8.mp4";
+                    a.href = URL.createObjectURL(blob);
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }
+                let download = new m3u8Download(resource.url_with_params, headers, callback);
+                download.download();
             }else{
                 fetch(resource.url_with_params, {headers: headers}).then(response=> response.blob())
                 .then(blob => {
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
                     link.download = 'video.mp4';
-
                     // 触发点击事件
                     link.click();
-
                     // 释放 URL 对象
                     URL.revokeObjectURL(link.href);
                 }).catch(error => {

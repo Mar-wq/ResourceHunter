@@ -18,11 +18,13 @@ class M3u8Download{
         this.duration_time = 0;
         this.headers = {headers: headers};
         this.fail_cnt = [];
+        // 下载完成的数量
         this.finish_cnt = 0;
         this.file_name = file_name;
         this.media_file = [];
         this.max_tasks = mask_task;
-        // this.transmuxer = {};
+        // ts文件个数
+        this.total_ts_num = 0;
     }
 
     download_file(fileDataList, filename) {
@@ -38,7 +40,7 @@ class M3u8Download{
     aes_decrypt(data, index) {
         let iv = this.aes_conf.iv || new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, index])
         return this.aes_conf.decryptor.decrypt(data, 0, iv.buffer || iv, true)
-      }
+    }
 
     // 合成URL
     merge_url(targetURL, baseURL) {
@@ -184,8 +186,10 @@ class M3u8Download{
                     this.duration_time += parseFloat(line.split('#EXTINF:')[1]);
                 }
             }
-            console.log("总时长： ", this.duration_time);
-
+            // 记录总的ts数量
+            this.total_ts_num = this.ts_list.length;
+            console.log("总时长: ", this.duration_time);
+            console.log("ts总数: ", this.total_ts_num);
 
 
             // 文件加密了
@@ -203,6 +207,14 @@ class M3u8Download{
         }).catch((err) => console.log("文件下载失败", err))
     }
 
+    get_download_status(){
+        return this.finish_cnt / this.total_ts_num;
+    }
+
+    download_fail_list(){
+        console.log("重新下载失败或超时的文件");
+        this.download_ts();
+    }
 }
 
 // let test = new M3u8Download({},"test.mp4");
