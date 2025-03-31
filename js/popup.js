@@ -1,6 +1,6 @@
 function is_m3u8(data) {
-    let exts = ["m3u8","m3u"];
-    let types = ["application/vnd.apple.mpegurl","application/x-mpegurl","application/mpegurl","application/octet-stream-m3u8"];
+    let exts = ["m3u8", "m3u"];
+    let types = ["application/vnd.apple.mpegurl", "application/x-mpegurl", "application/mpegurl", "application/octet-stream-m3u8"];
 
     let flag = false;
     flag = exts.includes(data.ext) || types.includes(data.response_type);
@@ -10,10 +10,10 @@ function is_m3u8(data) {
 // 向页面动态添加元素
 function add_item(resource) {
     // 暂时不显示ts文件
-    if(resource.file_name.match(/.*\.ts/)){
+    if (resource.file_name.match(/.*\.ts/)) {
         return null;
     }
-    if(!resource.response_type){
+    if (!resource.response_type) {
         resource.response_type = "unknow!"
     }
     let html = $(`
@@ -46,13 +46,13 @@ function add_item(resource) {
                 hide_div.slideDown();
                 // 删除Range头部，可以直接播放整个视频（针对m4s）
                 resource.request_headers = resource.request_headers.filter(item => item.name != "Range");
-                if(is_m3u8(resource)){
+                if (is_m3u8(resource)) {
                     let hls = new Hls({ enableWorker: false });
-                    setRequestHeaders(resource.request_headers, ()=>{
+                    setRequestHeaders(resource.request_headers, () => {
                         hls.loadSource(resource.url_with_params);
                         hls.attachMedia($(this).parent().find("video")[0]);
                     })
-                }else{
+                } else {
                     setRequestHeaders(resource.request_headers, () => {
                         $(this).parent().find("video").attr("src", resource.url_with_params);
                     });
@@ -61,39 +61,38 @@ function add_item(resource) {
         };
     })(resource))
 
-    html.find(".download").click((function (resource){
-        return function(){
+    html.find(".download").click((function (resource) {
+        return function () {
             alert("文件下载开始，请等待");
             resource.request_headers = resource.request_headers.filter(item => item.name != "Range");
             let req_headers = resource.request_headers;
             let headers = {}
-            for(let header of req_headers){
+            for (let header of req_headers) {
                 headers[header.name] = header.value;
             }
-            if(is_m3u8(resource)){
-                let callback = (blob)=>{
-                    let a = document.createElement('a');
-                    a.download = "testm3u8.mp4";
-                    a.href = URL.createObjectURL(blob);
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                }
-                let download = new m3u8Download(resource.url_with_params, headers, callback);
-                download.download();
-            }else{
-                fetch(resource.url_with_params, {headers: headers}).then(response=> response.blob())
-                .then(blob => {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = 'video.mp4';
-                    // 触发点击事件
-                    link.click();
-                    // 释放 URL 对象
-                    URL.revokeObjectURL(link.href);
-                }).catch(error => {
-                    console.error('下载失败:', error);
-                    alert("文件下载失败");
-                });
+            if (is_m3u8(resource)) {
+                // 发到后台下载
+                chrome.runtime.sendMessage({
+                    Message: "download",
+                    url: resource.url_with_params,
+                    headers: headers,
+                    is_m3u8: true
+                }, ()=>{
+                    if(chrome.runtime.lastError){
+                        console.log(chrome.runtime.lastError.message);
+                    }
+                })
+            } else {
+                chrome.runtime.sendMessage({
+                    Message: "download",
+                    url: resource.url_with_params,
+                    headers: headers,
+                    is_m3u8: false
+                },()=>{
+                    if(chrome.runtime.lastError){
+                        console.log(chrome.runtime.lastError.message);
+                    }
+                })
             }
         }
     })(resource))
@@ -122,7 +121,7 @@ function get_unique_by_url(infos) {
 // 更新页面
 let update_dom = (function () {
     let old_infos = new Map();
-    return function(infos_map){
+    return function (infos_map) {
         // console.log(infos_map);
         let $nodata = $("#nodata");
         let $resources_list = $("#resources_list")
@@ -133,21 +132,21 @@ let update_dom = (function () {
         $nodata.hide();
         let add_infos = new Map();
         // 找出新增节点
-        for(let [url, info] of infos_map){
-            if(!old_infos.has(url)){
+        for (let [url, info] of infos_map) {
+            if (!old_infos.has(url)) {
                 add_infos.set(url, info);
             }
         }
         // 增加新节点
-        for(let [url, info] of add_infos){
+        for (let [url, info] of add_infos) {
             let node = add_item(info)
-            if(node){
+            if (node) {
                 $resources_list.append(node);
             }
         }
         // 保存页面当前显示的数据
         old_infos = infos_map;
-    }  
+    }
 })();
 
 // 管理该页面的信息数据
@@ -224,7 +223,7 @@ $("#clear").click(
         // 清除页面已经展示的数据
         $("#nodata").show();
         $("#resources_list").empty();
-        
+
         let tab_id = await media_info.get_tab_id();
         // 发送消息给background，让其也清除对应页面的数据
         chrome.runtime.sendMessage({ Message: "clearData", tab_id: tab_id }, function () {

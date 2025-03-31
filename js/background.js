@@ -1,4 +1,6 @@
 importScripts("/js/handle_resource.js")
+
+
 // 发消息给popup页面
 function hook_callback(tmp, tab_id) {
     if (tmp) {
