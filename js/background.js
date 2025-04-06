@@ -11,7 +11,7 @@ function hook_callback(tmp, tab_id) {
         }, () => {
             if (chrome.runtime.lastError) {
                 // popup.js 未加载时，打印信息
-                console.log("报错位置： background.js", chrome.runtime.lastError.message);
+                console.log("popup页面不存在： background.js", chrome.runtime.lastError.message);
             }
         })
     }
@@ -105,19 +105,19 @@ let chromehook = new ChromeHook(__finder, __filter);
 chromehook.on_hook(hook_callback);
 
 
-// 页面主动请求时，返回数据
+// popup页面主动请求时，返回数据
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.Message == "getPopupData") {
         if (chromehook._finder.resource.has(request.tab_id)) {
-            tmp = chromehook._finder.resource.get(request.tab_id).content();
+            // tmp = chromehook._finder.resource.get(request.tab_id).content();
             sendResponse(chromehook._finder.resource.get(request.tab_id).content());
         }
         // 返回给sendMessage的页面， 防止报错
-        return true;
+        return false;
     }
     // popup被关闭时的处理
     else if (request.Message == "closePopup") {
-        return;
+        return false;
     }
     // 清除当前监听的缓存数据
     else if (request.Message === "clearData") {
@@ -125,6 +125,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             chromehook._finder.resource.delete(request.tab_id);
         }
         // 返回给sendMessage的页面， 防止报错
-        return true;
+        return false;
     }
 })
+
+

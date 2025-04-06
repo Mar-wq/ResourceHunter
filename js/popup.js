@@ -1,3 +1,9 @@
+// 展示小提示使用
+function print_tip(text, delay=500){
+    $('#show_tip').html(text).fadeIn(500).delay(delay).fadeOut(500);
+}
+
+
 function is_m3u8(data) {
     let exts = ["m3u8", "m3u"];
     let types = ["application/vnd.apple.mpegurl", "application/x-mpegurl", "application/mpegurl", "application/octet-stream-m3u8"];
@@ -63,7 +69,7 @@ function add_item(resource) {
 
     html.find(".download").click((function (resource) {
         return function () {
-            alert("文件下载开始，请等待");
+            print_tip("开始下载文件！")
             resource.request_headers = resource.request_headers.filter(item => item.name != "Range");
             let req_headers = resource.request_headers;
             let headers = {}
@@ -71,27 +77,18 @@ function add_item(resource) {
                 headers[header.name] = header.value;
             }
             if (is_m3u8(resource)) {
-                // 发到后台下载
-                chrome.runtime.sendMessage({
+                download_resource({
                     Message: "download",
                     url: resource.url_with_params,
                     headers: headers,
                     is_m3u8: true
-                }, ()=>{
-                    if(chrome.runtime.lastError){
-                        console.log(chrome.runtime.lastError.message);
-                    }
                 })
             } else {
-                chrome.runtime.sendMessage({
+                download_resource({
                     Message: "download",
                     url: resource.url_with_params,
                     headers: headers,
                     is_m3u8: false
-                },()=>{
-                    if(chrome.runtime.lastError){
-                        console.log(chrome.runtime.lastError.message);
-                    }
                 })
             }
         }
@@ -163,7 +160,7 @@ class MediaInfo {
         this.prepare_data = prepare_data;
         // 接收background劫持到的数据
         chrome.runtime.onMessage.addListener(async (request, sender, sendresponse) => {
-            sendresponse();
+            // sendresponse();
             let current_tab_id = await this.get_tab_id();
             if (request.Message === "popupData" && current_tab_id === request.tab_id) {
                 let map = this.prepare_data(request.infos);
@@ -179,6 +176,7 @@ class MediaInfo {
                     }
                 }
             }
+            return false;
         })
     }
 
@@ -208,6 +206,9 @@ class MediaInfo {
         this.update_callbacks = this.update_callbacks.filter(item => callback != item);
     }
 }
+
+
+
 
 
 
@@ -258,6 +259,44 @@ document.addEventListener("visibilitychange", async function () {
     // chrome.runtime.sendMessage({ Message: "closePopup", tab_id: tab_id });
 })
 
+
+// 发送消息到下载页面
+function download_resource(message){
+    const targetUrl = chrome.runtime.getURL("download_page.html");
+    // 如果没有下载页面，创建一个
+    chrome.tabs.query({url: targetUrl}, function(tabs) {
+        if(tabs.length <= 0){
+            // 如果没有找到，创建一个新的下载页面, 异步操作
+            chrome.tabs.create({url: targetUrl, active: false}, function(tab) {
+                let download_tabId = tab.id;
+                console.log("New download page created.");
+                // 如果页面未加载完成，则监听加载完成事件, 然后发送数据
+                const listener = (updatedTabId, changeInfo) => {
+                    if (updatedTabId === download_tabId && changeInfo.status === 'complete') {
+                        chrome.tabs.onUpdated.removeListener(listener);
+                        chrome.tabs.sendMessage(download_tabId, message, function(response) {
+                            if(chrome.runtime.lastError){
+                                console.log(chrome.runtime.lastError);
+                            }
+                            console.log("Message sent to download page");
+                        });
+                    }
+                };
+                chrome.tabs.onUpdated.addListener(listener);
+            });
+        }else{
+            // 如果找到了，获取第一个匹配的tab
+            let download_tabId = tabs[0].id;
+            // 发送消息给存在的下载页面
+            chrome.tabs.sendMessage(download_tabId, message, function(response) {
+                if(chrome.runtime.lastError){
+                    console.log(chrome.runtime.lastError);
+                }
+                console.log("Message sent to existing download page");
+            });
+        }
+    });
+}
 
 
 

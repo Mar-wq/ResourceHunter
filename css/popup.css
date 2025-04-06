@@ -98,3 +98,19 @@
     right: 5px;
     bottom: 5px;
 }
+
+#show_tip {
+    display: none;
+    background-color: rgb(1, 208, 189);
+    text-align: center;
+    color: white;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 1px 10px;
+    /* 确保其显示在顶层 */
+    z-index: 1000;   
+    /* 在可视窗口内，固定位置显示 */
+    position: fixed;
+    bottom: 80px;
+    left: 160px;
+}
