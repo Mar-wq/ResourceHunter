@@ -56,3 +56,24 @@ class CircularQueue {
         return result;
     }
 }
+
+
+// 用map实现的一个buffer
+class MapBuffer{
+    constructor(){
+        this.buffer = new Map();
+    }
+    append(key, value){
+        this.buffer.set(key, value);
+    }
+    delete(key){
+        this.buffer.delete(key);
+    }
+    size(){
+        return this.buffer.size;
+    }
+    get(key){
+        let res = this.buffer.get(key) || null;
+        return res;
+    }
+}

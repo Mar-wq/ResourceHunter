@@ -1,0 +1,70 @@
+h1{
+    text-align: center;
+}
+
+.task-list{
+    /* background-color: rgb(1, 208, 189); */
+    border-radius: 5px;
+}
+
+
+.task-info{
+    display: flex;
+}
+
+.task-item .video-icon{
+    background-image: url("../img/video.svg");
+    width: 32px;
+    height: 32px;
+}
+
+.task-item .task-name{
+    padding-left: 10px;
+    line-height: 32px;
+    font-weight: 600;
+}
+
+.task-item{
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.task-item .progress-container{
+    width: 300px;
+    /* border: 1px solid red; */
+    margin-left: 10px;
+    background-color: #D7D1B7;
+    border-radius: 20px;
+}
+
+.task-item .progress-container .progress-bar{
+    margin-top: 2px;
+    margin-left: 2px;
+    margin-right: 2px;
+    background-color: #68D7C6;
+    width: 1px;
+    height: 28px;
+    border-radius: 20px;
+    text-align: center;
+    line-height: 28px;
+}
+
+.task-item .complete-container{
+    display: none;
+    height: 32px;
+    line-height: 32px;
+    margin-left: 10px;
+}
+
+.task-item .complete{
+    display: flex;
+}
+
+.task-item .complete .complete-img{
+    background-image: url("/img/complete.svg");
+    width: 32px;
+    height: 32px;
+}
+
+

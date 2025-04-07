@@ -1,9 +1,10 @@
 // importScripts("/lib/aes-decryptor.js", "/lib/mux-mp4.js", "/lib/stream-saver.js")
 
 
+
 // 提供各种资源的下载方法
 class m3u8Download {
-    constructor(m3u8_url, headers, file_name) {
+    constructor(m3u8_url, headers, file_name, buffer_size=10) {
         this.m3u8_url = m3u8_url;
         this.headers = headers;
         this.ts_list = [];
@@ -11,13 +12,15 @@ class m3u8Download {
         this.finish_cnt = 0;
         this.duration_time = 0;
         this.aes_conf = {};
-        this.mp4_list = [];
-        // 下载完成后的资源接口
-        this.blob = null;
+        this.mp4_list = new MapBuffer();
+        // 最多缓存多少个ts
+        this.buffer_size = buffer_size;
 
-        // 未来考虑支持流式下载， 目前没实现
-        // this.stream_writer = null;
-        // this.stream_idx = 0;
+        // 支持流式下载 
+        this.stream_writer = streamSaver.createWriteStream(file_name).getWriter();
+        this.stream_idx = 0;
+        // 每当ts下载完成时的回调
+        this.callbacks = [];
     }
     // 合成网址
     merge_url(targetURL, baseURL) {
@@ -101,9 +104,10 @@ class m3u8Download {
                 keepOriginalTimestamps: true,
                 duration: parseInt(this.duration_time),
             });
+            // 转换完成后的回调
             transmuxer.on('data', segment => {
                 let mp4_data = null;
-                // mp4头部的数据不能丢
+                // 保留mp4头部的数据
                 if (index == 0) {
                     mp4_data = new Uint8Array(segment.initSegment.byteLength + segment.data.byteLength);
                     mp4_data.set(segment.initSegment, 0);
@@ -111,18 +115,32 @@ class m3u8Download {
                 } else {
                     mp4_data = segment.data;
                 }
-                this.mp4_list[index] = mp4_data;
+                // 转换后的数据存储到内存
+                this.mp4_list.append(index, mp4_data);
                 this.finish_cnt += 1;
                 // 修改状态为完成
                 this.ts_list[index].status = 2;
-
+                // 写入数据到磁盘
+                while(this.stream_idx < this.ts_list.length){
+                    const value = this.mp4_list.get(this.stream_idx);
+                    if(!value){
+                        break;
+                    }
+                    // 释放内存
+                    this.mp4_list.delete(this.stream_idx);
+                    this.stream_writer.write(value);
+                    this.stream_idx += 1;
+                }
+                // 所有数据都写入文件
+                if(this.stream_idx == this.ts_list.length){
+                    this.stream_writer.close();
+                }
+                // ts下载完成的回调
+                for(let callback of this.callbacks){
+                    callback(this.ts_cnt, this.finish_cnt);
+                }
                 // 打印进度
                 console.log(`ts总数${this.ts_cnt}, 当前完成${this, this.finish_cnt}`);
-
-                // 下载完成后的操作
-                if (this.finish_cnt == this.ts_cnt) {
-                    this.blob = new Blob(this.mp4_list, { type: "video/mp4" });
-                }
             })
 
             transmuxer.push(new Uint8Array(data));
@@ -131,8 +149,13 @@ class m3u8Download {
         let helper = (index) => {
             // 没有下载或则下载失败时， 才进行下载
             if (index < this.ts_list.length) {
-                // 没开始下载， 或者下载失败
+                // 没开始下载， 或者下载失败， 0：未开始下载  4: 下载失败
                 if ((this.ts_list[index].status == 0) || this.ts_list[index].status == 4) {
+                    // 如果缓存满了， 先暂停下载
+                    if(this.buffer_size <= this.mp4_list.size()){
+                        setTimeout(helper(index), 1000);
+                        return;
+                    }
                     // 状态更改为： 下载中
                     this.ts_list[index].status = 1;
                     this.fetch_with_headers(this.ts_list[index].url).then(res => res.arrayBuffer())
@@ -167,6 +190,10 @@ class m3u8Download {
         console.log("下载开始");
         await this.download_ts(6, this.callback);
         return this.blob;
+    }
+
+    on_new_ts(callback){
+        this.callbacks.push(callback);
     }
 
 }

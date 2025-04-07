@@ -81,6 +81,7 @@ function add_item(resource) {
                     Message: "download",
                     url: resource.url_with_params,
                     headers: headers,
+                    file_name: resource.file_name,
                     is_m3u8: true
                 })
             } else {
@@ -88,6 +89,7 @@ function add_item(resource) {
                     Message: "download",
                     url: resource.url_with_params,
                     headers: headers,
+                    file_name: resource.file_name,
                     is_m3u8: false
                 })
             }
